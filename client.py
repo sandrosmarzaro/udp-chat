@@ -5,6 +5,7 @@ import json
 HOST = ""
 PORT = 5000
 
+
 def server(udp):
     print(f"Starting UDP Server on port {PORT}")
     orig = ("", PORT)
@@ -15,6 +16,7 @@ def server(udp):
         string_dict = json.loads(msg_decoded)
         print(f"-> #{client}# {string_dict}")
 
+
 def client():
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     _thread.start_new_thread(server, (udp,))
@@ -24,12 +26,11 @@ def client():
         ip_dest = input("destino -> ")
         dest = (ip_dest, PORT)
         message = input("-> ")
-        msg = {}
-        msg['destino'] = ip_dest
-        msg['body'] = message
+        msg = {'destino': ip_dest, 'body': message}
         string_json = json.dumps(msg)
         udp.sendto(string_json.encode('utf-8'), dest)
     udp.close()
+
 
 if __name__ == "__main__":
     client()

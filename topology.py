@@ -5,7 +5,7 @@ from mn_wifi.net import Mininet_wifi
 
 
 def topology(remote_controller):
-    "Create a network."
+    """Create a network."""
     net = Mininet_wifi()
 
     info("*** Adding stations/hosts\n")
