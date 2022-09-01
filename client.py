@@ -23,10 +23,10 @@ def client():
     print("Type q to exit")
     message = None
     while message != "q":
-        ip_dest = input("destino -> ")
+        ip_dest = input("destiny -> ")
         dest = (ip_dest, PORT)
         message = input("-> ")
-        msg = {'destino': ip_dest, 'body': message}
+        msg = {'destiny': ip_dest, 'body': message}
         string_json = json.dumps(msg)
         udp.sendto(string_json.encode('utf-8'), dest)
     udp.close()
