@@ -15,10 +15,14 @@ HAS_CAME_IN_ROOM = False
 
 def server(udp):
     orig = ("", PORT)
+    # Bind the socket to the port
     udp.bind(orig)
     while True:
+        # Wait for a message
         msg, client = udp.recvfrom(1024)
+        # Decode the message
         msg_decoded = msg.decode('utf-8')
+        # Convert the message to a dictionary
         string_dict = json.loads(msg_decoded)
         if string_dict["action"] == 1:
             if string_dict["room_id"] == ROOM_ID:
@@ -33,21 +37,27 @@ def server(udp):
 
 def client():
     print(f"Starting UDP Server on port {PORT}")
+    # Create a UDP socket
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # Start a thread to listen for incoming messages
     _thread.start_new_thread(server, (udp,))
     message = None
     dest = (IP_SERVER, PORT)
     name = input("Nickname -> ")
     try:
         ROOM_ID = int(input("Room -> "))
+        # Send a message to enter a room
         came_in_room_msg = {
             'action': 1,
             'room_id': ROOM_ID,
             'name': name
         }
+        # Convert the message to a JSON string
         string_json = json.dumps(came_in_room_msg)
+        # Send the encoded message to the server
         udp.sendto(string_json.encode('utf-8'), dest)
     except Exception:
+        print("Error sending message!")
         sys.exit(0)
 
     count = 0
@@ -55,15 +65,19 @@ def client():
     while True:
         if not HAS_CAME_IN_ROOM:
             count += 1
+        # If the server accepted you in the room, you can send messages
         else:
             break
+        # If the server doesn't accept you in the room in 10 seconds, exit
         if count == 10:
             sys.exit(0)
+        print(".", end="")
         time.sleep(1)
 
     print("Type q to exit")
     while message != "q":
         message = input("Message -> ")
+        # Send a message to the server
         msg = {
             'action': 3,
             'name': NICKNAME,
@@ -71,9 +85,13 @@ def client():
             'msg_id': MSG_ID,
             'msg': message
         }
+        # Convert the message to a JSON string
         string_json = json.dumps(msg)
+        # Send the encoded message to the server
         udp.sendto(string_json.encode('utf-8'), dest)
+        # Increment the message id
         MSG_ID += 1
+    # Close the socket
     udp.close()
 
 
