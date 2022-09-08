@@ -13,7 +13,8 @@ MSG_ID = 1
 HAS_CAME_IN_ROOM = False
 
 
-def server(udp):
+def listener(udp):
+    global HAS_CAME_IN_ROOM
     orig = ("", PORT)
     # Bind the socket to the port
     udp.bind(orig)
@@ -39,11 +40,13 @@ def server(udp):
 
 
 def client():
+    global ROOM_ID
+    global MSG_ID
     print(f"Starting UDP Server on port {PORT}")
     # Create a UDP socket
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # Start a thread to listen for incoming messages
-    _thread.start_new_thread(server, (udp,))
+    _thread.start_new_thread(listener, (udp,))
     message = None
     dest = (IP_SERVER, PORT)
     name = input("Nickname -> ")
