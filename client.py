@@ -6,7 +6,7 @@ import time
 
 HOST = ""
 PORT = 5000
-IP_SERVER = "10.0.1.10"
+SERVER_IP = "10.0.1.10"
 NICKNAME = None
 ROOM_ID = None
 MSG_ID = 1
@@ -36,7 +36,6 @@ def listener(udp):
             pass
         elif string_dict["action"] == 3:
             pass
-        print(f"-> #{client}# {string_dict}")
 
 
 def client():
@@ -48,7 +47,7 @@ def client():
     # Start a thread to listen for incoming messages
     _thread.start_new_thread(listener, (udp,))
     message = None
-    dest = (IP_SERVER, PORT)
+    dest = (SERVER_IP, PORT)
     name = input("Nickname -> ")
     try:
         ROOM_ID = int(input("Room -> "))
@@ -76,6 +75,7 @@ def client():
             break
         # If the server doesn't accept you in the room in 10 seconds, exit
         if count == 10:
+            print("The server didn't accept you in the room")
             sys.exit(0)
         print(".", end="")
         time.sleep(1)
