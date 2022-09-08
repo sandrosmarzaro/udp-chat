@@ -24,11 +24,11 @@ def server(udp):
         msg_decoded = msg.decode('utf-8')
         # Convert the message to a dictionary
         string_dict = json.loads(msg_decoded)
-        # If is a reponse message of server of request to entry room
+        # If is a response message of server of request to entry room
         if string_dict["action"] == 1:
-            # Case your actual room be the reponse of server
+            # Case your actual room be the response of server
             if string_dict["room_id"] == ROOM_ID:
-                # If you was accept to room, change the confirmation variable
+                # If you are accept to room, change the confirmation variable
                 if string_dict["status"] == 1:
                     HAS_CAME_IN_ROOM = True
         elif string_dict["action"] == 2:
