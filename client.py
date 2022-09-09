@@ -73,8 +73,8 @@ def waiting_server_acceptance():
             print("The server didn't accept you in the room")
             sys.exit(0)
         print(".", end="")
-        print()
         time.sleep(1)
+    print()
 
 
 def send_messages(udp, dest):

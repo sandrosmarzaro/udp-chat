@@ -5,7 +5,24 @@ PORT = 5000
 USER_LIST = []
 
 
-def add_user(user, client):
+def add_user(string_dict, client, udp):
+    # Add the user to the list
+    add_user_list(string_dict, client)
+    # Send a response message of accept the user
+    response = {
+        "action": 1,
+        "name": string_dict["name"],
+        "room_id": string_dict["room_id"],
+        "status": 1
+    }
+    # Convert the message to a JSON string
+    response_json = json.dumps(response)
+    # Send the message to the client
+    udp.sendto(response_json.encode('utf-8'), client)
+    print(f"User {string_dict['name']} with IP {client[0]}, has entered the room {string_dict['room_id']}")
+
+
+def add_user_list(user, client):
     global USER_LIST
     # Create a new user
     new_user = {
@@ -31,20 +48,7 @@ def listener(udp):
             string_dict = json.loads(msg_decoded)
             # If is a request message of client to entry room
             if string_dict["action"] == 1:
-                # Add the user to the list
-                add_user(string_dict, client)
-                # Send a response message of accept the user
-                response = {
-                    "action": 1,
-                    "name": string_dict["name"],
-                    "room_id": string_dict["room_id"],
-                    "status": 1
-                }
-                # Convert the message to a JSON string
-                response_json = json.dumps(response)
-                # Send the message to the client
-                udp.sendto(response_json.encode('utf-8'), client)
-                print(f"User {string_dict['name']} with IP {client[0]}, has entered the room {string_dict['room_id']}")
+                add_user(string_dict, client, udp)
             # If is a request message of client to quit room
             elif string_dict["action"] == 2:
                 pass
