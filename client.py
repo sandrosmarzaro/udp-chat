@@ -4,7 +4,6 @@ import json
 import sys
 import time
 
-HOST = ""
 PORT = 5000
 SERVER_IP = "10.0.1.10"
 NICKNAME = None
@@ -41,7 +40,7 @@ def listener(udp):
 def client():
     global ROOM_ID
     global MSG_ID
-    print(f"Starting UDP Server on port {PORT}")
+    print(f"Starting UDP Client on port {PORT}")
     # Create a UDP socket
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # Start a thread to listen for incoming messages
@@ -66,7 +65,7 @@ def client():
         sys.exit(0)
 
     count = 0
-    print("Waiting the server to accept you in the room")
+    print("Waiting the server to accept you in the room", end="")
     while True:
         if not HAS_CAME_IN_ROOM:
             count += 1
@@ -78,6 +77,7 @@ def client():
             print("The server didn't accept you in the room")
             sys.exit(0)
         print(".", end="")
+        print()
         time.sleep(1)
 
     print("Type q to exit")

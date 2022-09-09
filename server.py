@@ -1,54 +1,71 @@
 import socket
-import _thread
 import json
 
-HOST = ""
 PORT = 5000
-userList = []
+USER_LIST = []
 
 
 def add_user(user, client):
+    global USER_LIST
+    # Create a new user
     new_user = {
         "name": user["name"],
-        "ip": client[0],
-        "port": client[1],
-        "group": user["group"]
+        "connexion": client,
+        "room_id": user["room_id"]
     }
-    userList.append(new_user)
+    # Add the user to the list
+    USER_LIST.append(new_user)
 
 
-def server(udp):
-    print(f"Starting UDP Server on port {PORT}")
+def listener(udp):
     orig = ("", PORT)
+    # Bind the socket to the port
     udp.bind(orig)
     while True:
+        # Wait for a message
         msg, client = udp.recvfrom(1024)
+        # Decode the message
         msg_decoded = msg.decode('utf-8')
         try:
+            # Convert the message to a dictionary
             string_dict = json.loads(msg_decoded)
-            if string_dict["action"] == 0:
+            # If is a request message of client to entry room
+            if string_dict["action"] == 1:
+                # Add the user to the list
                 add_user(string_dict, client)
+                # Send a response message of accept the user
+                response = {
+                    "action": 1,
+                    "name": string_dict["name"],
+                    "room_id": string_dict["room_id"],
+                    "status": 1
+                }
+                # Convert the message to a JSON string
+                response_json = json.dumps(response)
+                # Send the message to the client
+                udp.sendto(response_json.encode('utf-8'), client)
+                print(f"User {string_dict['name']} with IP {client[0]}, has entered the room {string_dict['room_id']}")
+            # If is a request message of client to quit room
+            elif string_dict["action"] == 2:
+                pass
+            # Case is a request message of client to send a message
+            elif string_dict["action"] == 3:
+                pass
         except Exception:
+            print("Message is not a JSON string")
+            # If the message is not a JSON string
+            udp.close()
             pass
 
 
-def client():
+def server():
+    print(f"Starting UDP Server on port {PORT}")
+    # Create a UDP socket
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    _thread.start_new_thread(server, (udp,))
-    print("Type q to exit")
-    message = None
-    while message != "q":
-        ip_dest = input("destiny -> ")
-        dest = (ip_dest, PORT)
-        message = input("-> ")
-        msg = {
-            'destiny': ip_dest,
-            'body': message
-        }
-        string_json = json.dumps(msg)
-        udp.sendto(string_json.encode('utf-8'), dest)
-    udp.close()
+    # Start a thread to listen for incoming messages
+    print("Waiting for messages...")
+    listener(udp)
 
 
 if __name__ == "__main__":
-    client()
+    server()
