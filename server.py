@@ -34,6 +34,26 @@ def add_user_list(user, client):
     USER_LIST.append(new_user)
 
 
+def withdraw_user(string_dict, client, udp):
+    for user in USER_LIST:
+        if user["name"] == string_dict["name"] and user["room_id"] == string_dict["room_id"]:
+            # Remove the user from the list
+            USER_LIST.remove(user)
+            # Send a response message of withdraw the user
+            response = {
+                "action": 2,
+                "name": string_dict["name"],
+                "room_id": string_dict["room_id"],
+                "status": 1
+            }
+            # Convert the message to a JSON string
+            response_json = json.dumps(response)
+            # Send the message to the client
+            udp.sendto(response_json.encode('utf-8'), client)
+            print(f"User {string_dict['name']} with IP {client[0]}, has left the room {string_dict['room_id']}")
+            break
+
+
 def listener(udp):
     orig = ("", PORT)
     # Bind the socket to the port
@@ -51,11 +71,11 @@ def listener(udp):
                 add_user(string_dict, client, udp)
             # If is a request message of client to quit room
             elif string_dict["action"] == 2:
-                pass
+                withdraw_user(string_dict, client, udp)
             # Case is a request message of client to send a message
             elif string_dict["action"] == 3:
                 pass
-        except Exception:
+        except TypeError or InterruptedError:
             print("Message is not a JSON string")
             # If the message is not a JSON string
             udp.close()
