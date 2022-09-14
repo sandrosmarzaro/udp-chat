@@ -1,6 +1,8 @@
 import socket
 import json
 
+from client import send_messages
+
 PORT = 5000
 USER_LIST = []
 
@@ -54,6 +56,38 @@ def withdraw_user(string_dict, client, udp):
             break
 
 
+def send_message_to_room(string_dict, client, udp):
+    send_reponse_to_sender(string_dict, client, udp)
+    # Send the message to all users in the room
+    for user in USER_LIST:
+        if user["room_id"] == string_dict["room_id"]:
+            # Send the message to the client
+            msg_to_send = {
+                "action": 3,
+                "room_id": string_dict["room_id"],
+                "name": string_dict["name"],
+                "msg": string_dict["msg"]
+            }
+            # Convert the message to a JSON string
+            msg_json = json.dumps(msg_to_send)
+            # Send the message to the client
+            udp.sendto(msg_json.encode('utf-8'), client)
+
+
+def send_reponse_to_sender(string_dict, client, udp):
+    # Send a response message of accept the user
+    response = {
+        "action": 3,
+        "name": string_dict["name"],
+        "room_id": string_dict["room_id"],
+        "msg_id": string_dict["msg_id"],
+        "status": 1
+    }
+    # Convert the message to a JSON string
+    response_json = json.dumps(response)
+    # Send the message to the client
+    udp.sendto(response_json.encode('utf-8'), client)
+
 def listener(udp):
     orig = ("", PORT)
     # Bind the socket to the port
@@ -74,7 +108,7 @@ def listener(udp):
                 withdraw_user(string_dict, client, udp)
             # Case is a request message of client to send a message
             elif string_dict["action"] == 3:
-                pass
+                send_message_to_room(string_dict, client, udp)
         except TypeError or InterruptedError:
             print("Message is not a JSON string")
             # If the message is not a JSON string

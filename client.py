@@ -10,6 +10,7 @@ NICKNAME = None
 ROOM_ID = None
 MSG_ID = 1
 
+
 class Flag:
     flags = None
     def __init__(self):
@@ -20,6 +21,7 @@ class Flag:
         }
 
 flag = Flag()
+
 
 def listener(udp):
     global flag
@@ -51,7 +53,13 @@ def listener(udp):
                     if string_dict["status"] == 1:
                         flag.flags["2"] = True
         elif string_dict["action"] == 3:
-            pass
+            if string_dict["room_id"] == ROOM_ID:
+                if string_dict["name"] == NICKNAME:
+                    flag.flags["3"] = True
+            if string_dict["room_id"] == ROOM_ID:
+                if string_dict["name"] != NICKNAME:
+                    print(f"{string_dict['name']} -> {string_dict['msg']}")
+
 
 
 def request_to_entry_room(udp, dest):
@@ -88,11 +96,13 @@ def waiting_server_acceptance(action):
         else:
             break
         # If the server doesn't accept you in the room in 10 seconds, exit
-        if count == 10:
+        if count == 10 and action != 3:
             print()
             print("The server didn't accept your request")
             sys.exit(0)
         print(".", end="")
+        if count == 10 and action == 3:
+            print("Your message was not sent")
         time.sleep(1)
     print()
 
@@ -117,6 +127,8 @@ def send_messages(udp, dest):
         string_json = json.dumps(msg)
         # Send the encoded message to the server
         udp.sendto(string_json.encode('utf-8'), dest)
+        waiting_server_acceptance(3)
+        print("Your message was sent")
         # Increment the message id
         MSG_ID += 1
 
