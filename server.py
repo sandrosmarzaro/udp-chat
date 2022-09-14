@@ -1,8 +1,6 @@
 import socket
 import json
 
-from client import send_messages
-
 PORT = 5000
 USER_LIST = []
 
@@ -57,10 +55,11 @@ def withdraw_user(string_dict, client, udp):
 
 
 def send_message_to_room(string_dict, client, udp):
-    send_reponse_to_sender(string_dict, client, udp)
+    send_response_to_sender(string_dict, client, udp)
     # Send the message to all users in the room
+    print(f"User {string_dict['name']} with IP {client[0]}, has sent a message to the room {string_dict['room_id']}")
     for user in USER_LIST:
-        if user["room_id"] == string_dict["room_id"]:
+        if user["room_id"] == string_dict["room_id"] and user["name"] != string_dict["name"]:
             # Send the message to the client
             msg_to_send = {
                 "action": 3,
@@ -71,10 +70,11 @@ def send_message_to_room(string_dict, client, udp):
             # Convert the message to a JSON string
             msg_json = json.dumps(msg_to_send)
             # Send the message to the client
-            udp.sendto(msg_json.encode('utf-8'), client)
+            udp.sendto(msg_json.encode('utf-8'), user["connexion"])
+            print(f"Message sent to {user['name']} with IP {user['connexion'][0]}")
 
 
-def send_reponse_to_sender(string_dict, client, udp):
+def send_response_to_sender(string_dict, client, udp):
     # Send a response message of accept the user
     response = {
         "action": 3,
@@ -87,6 +87,7 @@ def send_reponse_to_sender(string_dict, client, udp):
     response_json = json.dumps(response)
     # Send the message to the client
     udp.sendto(response_json.encode('utf-8'), client)
+
 
 def listener(udp):
     orig = ("", PORT)
