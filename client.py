@@ -9,19 +9,27 @@ SERVER_IP = "10.0.1.10"
 NICKNAME = None
 ROOM_ID = None
 MSG_ID = 1
-IS_IN_THE_ROOM = False
-IT_LEFT_ROOM = False
-IS_SENT_MESSAGE = False
 
+class Flag:
+    flags = None
+    def __init__(self):
+        self.flags = {
+            "1": False,
+            "2": False,
+            "3": False
+        }
+
+flag = Flag()
 
 def listener(udp):
-    global IS_IN_THE_ROOM
-    global IT_LEFT_ROOM
+    global flag
     orig = ("", PORT)
 
     # Bind the socket to the port
     udp.bind(orig)
     while True:
+        global flag
+
         # Wait for a message
         msg, client = udp.recvfrom(1024)
         # Decode the message
@@ -35,13 +43,13 @@ def listener(udp):
                 if string_dict["room_id"] == ROOM_ID:
                     # If you are accept to room, change the confirmation variable
                     if string_dict["status"] == 1:
-                        IS_IN_THE_ROOM = True
+                        flag.flags["1"] = True
         # If you want to leave the room
         elif string_dict["action"] == 2:
             if string_dict["name"] == NICKNAME:
                 if string_dict["room_id"] == ROOM_ID:
                     if string_dict["status"] == 1:
-                        IT_LEFT_ROOM = True
+                        flag.flags["2"] = True
         elif string_dict["action"] == 3:
             pass
 
@@ -68,12 +76,13 @@ def request_to_entry_room(udp, dest):
         sys.exit(0)
 
 
-def waiting_server_acceptance(flag):
+def waiting_server_acceptance(action):
+    global flag
     count = 0
 
     print("Waiting the server to accept your request", end="")
     while True:
-        if not flag:
+        if not flag.flags[str(action)]:
             count += 1
         # If the server accepted you in the room, you can send messages
         else:
@@ -94,7 +103,7 @@ def send_messages(udp, dest):
     print("Type q to exit")
     while message != "q":
         message = input("Message -> ")
-        if message != "q":
+        if message == "q":
             request_to_leave_room(udp, dest)
         # Send a message to the server
         msg = {
@@ -113,6 +122,8 @@ def send_messages(udp, dest):
 
 
 def request_to_leave_room(udp, dest):
+    global flag
+
     # Create a leave room message
     leave_room_msg = {
         'action': 2,
@@ -124,7 +135,7 @@ def request_to_leave_room(udp, dest):
     # Send the encoded message request to the server
     udp.sendto(string_json.encode('utf-8'), dest)
     # Waiting the server to withdraw you in the room
-    waiting_server_acceptance(IT_LEFT_ROOM)
+    waiting_server_acceptance(2)
     print("You left the room!")
 
 
@@ -138,7 +149,7 @@ def client():
 
     request_to_entry_room(udp, dest)
 
-    waiting_server_acceptance(IS_IN_THE_ROOM)
+    waiting_server_acceptance(1)
 
     send_messages(udp, dest)
 
