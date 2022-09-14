@@ -13,12 +13,14 @@ MSG_ID = 1
 
 class Flag:
     flags = None
+
     def __init__(self):
         self.flags = {
-            "1": False,
-            "2": False,
-            "3": False
+            "1": False,  # To enter a room
+            "2": False,  # To leave a room
+            "3": False  # To send a message
         }
+
 
 flag = Flag()
 
@@ -51,6 +53,7 @@ def listener(udp):
             if string_dict["name"] == NICKNAME:
                 if string_dict["room_id"] == ROOM_ID:
                     if string_dict["status"] == 1:
+                        # If you are withdraw to room, change the confirmation variable
                         flag.flags["2"] = True
         elif string_dict["action"] == 3:
             if string_dict["room_id"] == ROOM_ID:
@@ -58,8 +61,8 @@ def listener(udp):
                     flag.flags["3"] = True
             if string_dict["room_id"] == ROOM_ID:
                 if string_dict["name"] != NICKNAME:
+                    # Print the message received
                     print(f"{string_dict['name']} -> {string_dict['msg']}")
-
 
 
 def request_to_entry_room(udp, dest):
@@ -101,6 +104,7 @@ def waiting_server_acceptance(action):
             print("The server didn't accept your request")
             sys.exit(0)
         print(".", end="")
+        # If the server doesn't accept you in the room in 10 seconds and you are sending messages
         if count == 10 and action == 3:
             print("Your message was not sent")
         time.sleep(1)
@@ -127,6 +131,7 @@ def send_messages(udp, dest):
         string_json = json.dumps(msg)
         # Send the encoded message to the server
         udp.sendto(string_json.encode('utf-8'), dest)
+        # Waiting the server to confirm the message
         waiting_server_acceptance(3)
         print("Your message was sent")
         # Increment the message id
