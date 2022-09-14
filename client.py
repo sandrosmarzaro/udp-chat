@@ -11,6 +11,7 @@ ROOM_ID = None
 MSG_ID = 1
 
 
+# Object to store the confirmation of the server
 class Flag:
     flags = None
 
@@ -22,6 +23,7 @@ class Flag:
         }
 
 
+# Create a flag object
 flag = Flag()
 
 
@@ -32,8 +34,6 @@ def listener(udp):
     # Bind the socket to the port
     udp.bind(orig)
     while True:
-        global flag
-
         # Wait for a message
         msg, client = udp.recvfrom(1024)
         # Decode the message
@@ -55,10 +55,13 @@ def listener(udp):
                     if string_dict["status"] == 1:
                         # If you are withdraw to room, change the confirmation variable
                         flag.flags["2"] = True
+        # If you want to send a message
         elif string_dict["action"] == 3:
+            # Cause for the confirmation response about your message sent
             if string_dict["room_id"] == ROOM_ID:
                 if string_dict["name"] == NICKNAME:
                     flag.flags["3"] = True
+            # Cause for the message sent by other user
             if string_dict["room_id"] == ROOM_ID:
                 if string_dict["name"] != NICKNAME:
                     # Print the message received
@@ -114,6 +117,7 @@ def waiting_server_acceptance(action):
 def send_messages(udp, dest):
     global MSG_ID
     message = None
+
     print("Type q to exit")
     while message != "q":
         message = input("Message -> ")
@@ -139,8 +143,6 @@ def send_messages(udp, dest):
 
 
 def request_to_leave_room(udp, dest):
-    global flag
-
     # Create a leave room message
     leave_room_msg = {
         'action': 2,
