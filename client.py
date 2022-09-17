@@ -11,24 +11,16 @@ ROOM_ID = None
 MSG_ID = 1
 
 
-# Object to store the confirmation of the server
-class Flag:
-    flags = None
-
-    def __init__(self):
-        self.flags = {
+# Dictionary to store the confirmation of the server
+flags = {
             "1": False,  # To enter a room
             "2": False,  # To leave a room
             "3": False  # To send a message
         }
 
 
-# Create a flag object
-flag = Flag()
-
-
 def listener(udp):
-    global flag
+    global flags
     orig = ("", PORT)
 
     # Bind the socket to the port
@@ -47,20 +39,20 @@ def listener(udp):
                 if string_dict["room_id"] == ROOM_ID:
                     # If you are accept to room, change the confirmation variable
                     if string_dict["status"] == 1:
-                        flag.flags["1"] = True
+                        flags["1"] = True
         # If you want to leave the room
         elif string_dict["action"] == 2:
             if string_dict["name"] == NICKNAME:
                 if string_dict["room_id"] == ROOM_ID:
                     if string_dict["status"] == 1:
                         # If you are withdraw to room, change the confirmation variable
-                        flag.flags["2"] = True
+                        flags["2"] = True
         # If you want to send a message
         elif string_dict["action"] == 3:
             # Cause for the confirmation response about your message sent
             if string_dict["room_id"] == ROOM_ID:
                 if string_dict["name"] == NICKNAME:
-                    flag.flags["3"] = True
+                    flags["3"] = True
             # Cause for the message sent by other user
             if string_dict["room_id"] == ROOM_ID:
                 if string_dict["name"] != NICKNAME:
@@ -93,12 +85,12 @@ def request_to_entry_room(udp, dest):
 
 
 def waiting_server_acceptance(action):
-    global flag
+    global flags
     count = 0
 
     print("[APP] -> Waiting the server to accept your request", end="")
     while True:
-        if not flag.flags[str(action)]:
+        if not flags[str(action)]:
             count += 1
         # If the server accepted you in the room, you can send messages
         else:
