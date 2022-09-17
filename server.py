@@ -1,8 +1,12 @@
 import socket
 import json
+import logging
 
 PORT = 5000
 USER_LIST = []
+
+logging.basicConfig(filename='server.log', level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
 
 
 def add_user(string_dict, client, udp):
@@ -19,7 +23,7 @@ def add_user(string_dict, client, udp):
     response_json = json.dumps(response)
     # Send the message to the client
     udp.sendto(response_json.encode('utf-8'), client)
-    print(f"User {string_dict['name']} with IP {client[0]}, has entered the room {string_dict['room_id']}")
+    logging.debug(f"User {string_dict['name']} with IP {client[0]}, has entered the room {string_dict['room_id']}")
 
 
 def add_user_list(user, client):
@@ -50,14 +54,14 @@ def withdraw_user(string_dict, client, udp):
             response_json = json.dumps(response)
             # Send the message to the client
             udp.sendto(response_json.encode('utf-8'), client)
-            print(f"User {string_dict['name']} with IP {client[0]}, has left the room {string_dict['room_id']}")
+            logging.debug(f"User {string_dict['name']} with IP {client[0]}, has left the room {string_dict['room_id']}")
             break
 
 
 def send_message_to_room(string_dict, client, udp):
     send_response_to_sender(string_dict, client, udp)
     # Send the message to all users in the room
-    print(f"User {string_dict['name']} with IP {client[0]}, has sent a message to the room {string_dict['room_id']}")
+    logging.debug(f"User {string_dict['name']} IP {client[0]}, has sent a message to the room {string_dict['room_id']}")
     for user in USER_LIST:
         if user["room_id"] == string_dict["room_id"] and user["name"] != string_dict["name"]:
             # Send the message to the client
@@ -71,7 +75,7 @@ def send_message_to_room(string_dict, client, udp):
             msg_json = json.dumps(msg_to_send)
             # Send the message to the client
             udp.sendto(msg_json.encode('utf-8'), user["connexion"])
-            print(f"Message sent to {user['name']} with IP {user['connexion'][0]}")
+            logging.debug(f"User {string_dict['name']} IP {client[0]}, has sent to room {string_dict['room_id']}")
 
 
 def send_response_to_sender(string_dict, client, udp):
@@ -111,17 +115,18 @@ def listener(udp):
             elif string_dict["action"] == 3:
                 send_message_to_room(string_dict, client, udp)
         except TypeError or InterruptedError:
-            print("Message is not a JSON string")
             # If the message is not a JSON string
+            logging.error(f"Error in the message received from {client[0]}")
             udp.close()
             pass
 
 
 def server():
-    print(f"Starting UDP Server on port {PORT}")
+    logging.debug(f"Starting UDP Server on port {PORT}")
     # Create a UDP socket
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # Start a thread to listen for incoming messages
+    logging.info("Starting listener thread")
     print("Waiting for messages...")
     listener(udp)
 

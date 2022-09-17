@@ -3,6 +3,7 @@ import _thread
 import json
 import sys
 import time
+import logging
 
 PORT = 5000
 SERVER_IP = "10.0.1.10"
@@ -17,6 +18,9 @@ flags = {
             "2": False,  # To leave a room
             "3": False  # To send a message
         }
+
+logging.basicConfig(filename='client.log', level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
 
 
 def listener(udp):
@@ -79,8 +83,8 @@ def request_to_entry_room(udp, dest):
         udp.sendto(string_json.encode('utf-8'), dest)
         # Waiting the server to accept you in the room
         waiting_server_acceptance(1)
-    except TypeError or InterruptedError:
-        print("[APP] -> Error sending message!")
+    except Exception as e:
+        logging.critical(f"Error sending message to server: {e}")
         sys.exit(0)
 
 
@@ -88,7 +92,7 @@ def waiting_server_acceptance(action):
     global flags
     count = 0
 
-    print("[APP] -> Waiting the server to accept your request", end="")
+    logging.info("Waiting server acceptance")
     while True:
         if not flags[str(action)]:
             count += 1
@@ -96,23 +100,22 @@ def waiting_server_acceptance(action):
         else:
             break
         # If the server doesn't accept you in the room in 10 seconds, exit
-        if count == 10 and action != 3:
-            print()
-            print("[APP] -> The server didn't accept your request")
-            sys.exit(0)
-        print(".", end="")
-        # If the server doesn't accept you in the room in 10 seconds and you are sending messages
-        if count == 10 and action == 3:
-            print("[APP] -> Your message was not sent")
+        if count == 10:
+            if action != 3:
+                logging.critical("Server doesn't accept your request")
+                print("[APP] -> Server doesn't accept your request")
+                sys.exit(0)
+            # If the server doesn't accept you in the room in 10 seconds and you are sending messages
+            elif action == 3:
+                logging.warning("Your message was not sent")
         time.sleep(1)
-    print()
 
 
 def send_messages(udp, dest):
     global MSG_ID
     message = None
 
-    print("[APP] -> Type q to exit")
+    print("[APP] -> Type ""q"" to exit")
     while message != "q":
         message = input("[APP] Message -> ")
         if message == "q":
@@ -132,7 +135,7 @@ def send_messages(udp, dest):
             udp.sendto(string_json.encode('utf-8'), dest)
             # Waiting the server to confirm the message
             waiting_server_acceptance(3)
-            print("[APP] -> Your message was sent")
+            logging.info("Your message was sent")
             # Increment the message id
             MSG_ID += 1
 
@@ -150,11 +153,12 @@ def request_to_leave_room(udp, dest):
     udp.sendto(string_json.encode('utf-8'), dest)
     # Waiting the server to withdraw you in the room
     waiting_server_acceptance(2)
+    logging.info("You left the room")
     print("[APP] -> You left the room!")
 
 
 def client():
-    print(f"[APP] -> Starting UDP Client on port {PORT}")
+    logging.debug(f"Starting UDP Client on port {PORT}")
     # Create a UDP socket
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # Start a thread to listen for incoming messages
